@@ -3,7 +3,8 @@ void setup() {
 DDRD |= B11110000;
 Serial.begin(57600);
 
-delay(3000);}
+//delay(3000);
+}
 
 void loop() {
 
