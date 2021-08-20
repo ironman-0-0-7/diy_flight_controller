@@ -1,4 +1,5 @@
 #include <Wire.h>
+#define RAD_TO_DEG 57.295779513082320876798154814105
 const int gyro_addr=0x68;
 int temp;
 long acc_reading[3];
@@ -14,8 +15,8 @@ int frequency_of_gyro_reading=250;
 // frequency of gyro is frequency_of_gyro_reading
 int conversion_constant= frequency_of_gyro_reading*65.5 ;
 float gyro_yaw,gyro_roll,gyro_pitch;
-int acc_yaw,acc_roll,acc_pitch;
-//####################################################### SETUP #################################################################################
+double acc_roll,acc_pitch;
+//####################################################### SETUP ##############################################################################################
 void setup() {
 Serial.begin(57600);
 Serial.println("hello world ! ! !");
@@ -40,7 +41,7 @@ for(int i=0;i<10;i++)
 {
   Serial.println("_______________");
   Serial.println(i);
-  
+
 read_mpu(gyro_addr);
 
  Serial.print(acc_reading[0]);
@@ -61,7 +62,7 @@ Serial.println(total_accleration);
 */
 
 }
-//####################################################################### LOOP  ############################################################
+//####################################################################### LOOP  ################################################################################
 void loop() {
 
 /*
@@ -69,26 +70,10 @@ read_mpu(gyro_addr);
 Serial.println(gyro_yaw);
 delay(4);
 */
-
-
 read_mpu(gyro_addr);
-long total_accleration= acc_reading[0]*acc_reading[0] + acc_reading[1]*acc_reading[1] + acc_reading[2]*acc_reading[2];
-double R_acc=sqrt(total_accleration);
-
-double X_acc=acc_reading[0]; 
-
-double inv_sin_value=X_acc/R_acc;
-
-double pitch=asin(inv_sin_value);
-pitch=(pitch*180)/3.14;
-Serial.println(pitch);
-
-
-
+Serial.println(acc_roll);
 }
-
-
-//####################################################################################### SET UP GYRO ######################################################################################################
+//####################################################################################### SET UP GYRO ############################################################
 void gyro_setup(int gyro_addr)
 {
   //Setup the MPU-6050
@@ -112,7 +97,7 @@ void gyro_setup(int gyro_addr)
     Wire.write(0x03);                                                          //Set the register bits as 00000011 (Set Digital Low Pass Filter to ~43Hz)
     Wire.endTransmission();                                                    //End the transmission with the gyro
 }
-//################################################################################### READ MPU ###########################################################################################################
+//################################################################################### READ MPU ####################################################################
 void read_mpu(int gyro_addr){
     //Read the MPU-6050
     Wire.beginTransmission(gyro_addr);                                   //Start communication with the gyro.
@@ -131,6 +116,7 @@ void read_mpu(int gyro_addr){
     gyro_reading[0]= Wire.read()<<8|Wire.read();                              //Read high and low part of the angular data.
     gyro_reading[2] = Wire.read()<<8|Wire.read();                              //Read high and low part of the angular data.
 
+//.......................................................... Angle estimation by intergrating gyro value .......................
 //SUbstrcting the gyro_offset value calculated during calibration
 gyro_reading[0]=gyro_reading[0]-gyro_offset[0];
 gyro_reading[1]=gyro_reading[1]-gyro_offset[1];
@@ -138,49 +124,28 @@ gyro_reading[2]=gyro_reading[2]-gyro_offset[2];
 
 //Converting and then intergrating gyro value
 //current value = previous value + converted gyro value * dt
-//........................................................................
 gyro_yaw=gyro_yaw+gyro_reading[2]/conversion_constant;
 gyro_roll=gyro_roll+gyro_reading[1]/conversion_constant;
 gyro_pitch=gyro_pitch+gyro_reading[0]/conversion_constant;
-//.......................................................................
+//...............................................................................................................................
 
-
-
-
-
-//..................................... Angle estimation using acclerometer Reading ..................................................
-
-/*
-//total_accleration = (a_x^2+a_y^2+a_z^2)^0.5
+//..................................... Angle estimation using acclerometer Reading ..............................................
 long total_accleration= acc_reading[0]*acc_reading[0] + acc_reading[1]*acc_reading[1] + acc_reading[2]*acc_reading[2];
-total_accleration=sqrt(total_accleration);
+double R_acc=sqrt(total_accleration);
 
-double inv_sin_value=acc_reading[0]/total_accleration
-acc_pitch=
+double x_acc=acc_reading[0];
+double y_acc=acc_reading[1];
 
-*/
+acc_pitch=asin(x_acc/R_acc);
+acc_pitch=acc_pitch*RAD_TO_DEG;
+acc_roll=asin(y_acc/R_acc);
+acc_roll=acc_roll*RAD_TO_DEG;
 
-
-//.........................................................................................................................................
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// pitch=asin(inv_sin_value);
+//pitch=(pitch*180)/3.14;
+//...................................................................................................................................
 }
-
-//############################################################################# Calibrate MPU  ###################################################################################################################
+//############################################################################# Calibrate MPU  ########################################################################
 void cal_mpu(int gyro_addr,int num_of_rounds)
 {
 long gyro_sum[3];
