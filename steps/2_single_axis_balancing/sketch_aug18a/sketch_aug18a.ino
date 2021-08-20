@@ -1,12 +1,12 @@
 #include <Wire.h>
 const int gyro_addr=0x68;
 int temp;
-int acc_reading[3];
+long acc_reading[3];
 float gyro_reading[3];
 /*
-gyro[0] => pitch axis 
-gyro[1] => roll axis 
-gyro[2] => yaw axis 
+gyro[0] => pitch axis
+gyro[1] => roll axis
+gyro[2] => yaw axis
 */
 int gyro_offset[3];
 int frequency_of_gyro_reading=250;
@@ -14,25 +14,77 @@ int frequency_of_gyro_reading=250;
 // frequency of gyro is frequency_of_gyro_reading
 int conversion_constant= frequency_of_gyro_reading*65.5 ;
 float gyro_yaw,gyro_roll,gyro_pitch;
+int acc_yaw,acc_roll,acc_pitch;
 //####################################################### SETUP #################################################################################
 void setup() {
 Serial.begin(57600);
 Serial.println("hello world ! ! !");
 Serial.println("setting up gyro");
 gyro_setup(gyro_addr);//Setting up gyro registers
+
+/*
 Serial.println("Calculating  gyro ofset");
 cal_mpu(gyro_addr,50);// Calculating gyro gyro_offset
-//TODO  ********************** setting initial angle value from acclerometer 
+*/
+
+
+//TODO  ********************** setting initial angle value from acclerometer
 gyro_yaw=0;
 gyro_roll=0;
 gyro_pitch=0;
 
+
+
+/*
+for(int i=0;i<10;i++)
+{
+  Serial.println("_______________");
+  Serial.println(i);
+  
+read_mpu(gyro_addr);
+
+ Serial.print(acc_reading[0]);
+  Serial.print(" x value ||");
+   Serial.print(acc_reading[1]);
+    Serial.print(" y value ||");
+     Serial.print(acc_reading[2]);
+    Serial.print(" z value ||");
+
+long total_accleration= (acc_reading[0]*acc_reading[0]) +( acc_reading[1]*acc_reading[1]) +( acc_reading[2]*acc_reading[2]);
+total_accleration=sqrt(total_accleration);
+
+
+//long total_accleration= (acc_reading[0]*acc_reading[0]);
+Serial.println(total_accleration);
+}
+
+*/
+
 }
 //####################################################################### LOOP  ############################################################
 void loop() {
+
+/*
 read_mpu(gyro_addr);
 Serial.println(gyro_yaw);
 delay(4);
+*/
+
+
+read_mpu(gyro_addr);
+long total_accleration= acc_reading[0]*acc_reading[0] + acc_reading[1]*acc_reading[1] + acc_reading[2]*acc_reading[2];
+double R_acc=sqrt(total_accleration);
+
+double X_acc=acc_reading[0]; 
+
+double inv_sin_value=X_acc/R_acc;
+
+double pitch=asin(inv_sin_value);
+pitch=(pitch*180)/3.14;
+Serial.println(pitch);
+
+
+
 }
 
 
@@ -71,10 +123,10 @@ void read_mpu(int gyro_addr){
     acc_reading[0] = Wire.read()<<8|Wire.read();                               //Add the low and high byte to the acc_x variable.
     acc_reading[1] = Wire.read()<<8|Wire.read();                               //Add the low and high byte to the acc_y variable.
     acc_reading[2] = Wire.read()<<8|Wire.read();                               //Add the low and high byte to the acc_z variable.
-    
+
     temp = Wire.read()<<8|Wire.read();                               //Add the low and high byte to the temperature variable.
 
-     
+
     gyro_reading[1]= Wire.read()<<8|Wire.read();                              //Read high and low part of the angular data.
     gyro_reading[0]= Wire.read()<<8|Wire.read();                              //Read high and low part of the angular data.
     gyro_reading[2] = Wire.read()<<8|Wire.read();                              //Read high and low part of the angular data.
@@ -91,6 +143,40 @@ gyro_yaw=gyro_yaw+gyro_reading[2]/conversion_constant;
 gyro_roll=gyro_roll+gyro_reading[1]/conversion_constant;
 gyro_pitch=gyro_pitch+gyro_reading[0]/conversion_constant;
 //.......................................................................
+
+
+
+
+
+//..................................... Angle estimation using acclerometer Reading ..................................................
+
+/*
+//total_accleration = (a_x^2+a_y^2+a_z^2)^0.5
+long total_accleration= acc_reading[0]*acc_reading[0] + acc_reading[1]*acc_reading[1] + acc_reading[2]*acc_reading[2];
+total_accleration=sqrt(total_accleration);
+
+double inv_sin_value=acc_reading[0]/total_accleration
+acc_pitch=
+
+*/
+
+
+//.........................................................................................................................................
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }
 
@@ -118,7 +204,7 @@ Serial.print("Calibrating gyro:");
   gyro_offset[0]=gyro_sum[0]/num_of_rounds;
   gyro_offset[1]=gyro_sum[1]/num_of_rounds;
   gyro_offset[2]=gyro_sum[2]/num_of_rounds;
-  
+
 Serial.print("gyro ofset 0: ");
 Serial.print(gyro_offset[0]);
 Serial.print("|| gyro ofset 1: ");
