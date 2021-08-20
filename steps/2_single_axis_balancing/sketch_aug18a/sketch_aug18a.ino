@@ -3,7 +3,7 @@
 
 
 //complimentary filter params  YFMC c=0.9996
-double c=0.998;
+double c=0.98;
 double c_=1-c;
 
 
@@ -24,7 +24,7 @@ int conversion_constant= frequency_of_gyro_reading*65.5 ;
 float gyro_yaw,gyro_roll,gyro_pitch;
 double acc_roll,acc_pitch;
 
-int pitch,roll,yaw;
+double pitch,roll,yaw;
 
 
 
@@ -111,11 +111,11 @@ read_mpu(gyro_addr);
 Serial.println(gyro_yaw);
 delay(4);
 */
-/*
+
 read_mpu(gyro_addr);
-Serial.println(gyro_pitch);
+Serial.println(roll);
 delay(4);
-*/
+
 }
 //####################################################################################### SET UP GYRO ############################################################
 void gyro_setup(int gyro_addr)
