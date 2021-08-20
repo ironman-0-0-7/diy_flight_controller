@@ -1,5 +1,12 @@
 #include <Wire.h>
 #define RAD_TO_DEG 57.295779513082320876798154814105
+
+
+//complimentary filter params  YFMC c=0.9996
+double c=0.998;
+double c_=1-c;
+
+
 const int gyro_addr=0x68;
 int temp;
 long acc_reading[3];
@@ -16,6 +23,13 @@ int frequency_of_gyro_reading=250;
 int conversion_constant= frequency_of_gyro_reading*65.5 ;
 float gyro_yaw,gyro_roll,gyro_pitch;
 double acc_roll,acc_pitch;
+
+int pitch,roll,yaw;
+
+
+
+
+
 //####################################################### SETUP ##############################################################################################
 void setup() {
 Serial.begin(57600);
@@ -23,10 +37,10 @@ Serial.println("hello world ! ! !");
 Serial.println("setting up gyro");
 gyro_setup(gyro_addr);//Setting up gyro registers
 
-/*
+
 Serial.println("Calculating  gyro ofset");
 cal_mpu(gyro_addr,50);// Calculating gyro gyro_offset
-*/
+
 
 
 //TODO  ********************** setting initial angle value from acclerometer
@@ -61,17 +75,47 @@ Serial.println(total_accleration);
 
 */
 
+/*
+unsigned long start = micros();
+// Call to your function
+myFunction();
+// Compute the time it took
+unsigned long end = micros();
+unsigned long delta = end - start;
+Serial.println(delta);
+
+
+############## calculate time of execution
+*/
+
+/*
+unsigned long start = micros();
+read_mpu(gyro_addr);
+Serial.println(gyro_pitch);
+
+unsigned long end_t = micros();
+unsigned long delta = end_t - start;
+Serial.println("delta");
+Serial.println(delta);
+
+728 micro seconds
+*/
 }
 //####################################################################### LOOP  ################################################################################
 void loop() {
+
+
 
 /*
 read_mpu(gyro_addr);
 Serial.println(gyro_yaw);
 delay(4);
 */
+/*
 read_mpu(gyro_addr);
-Serial.println(acc_roll);
+Serial.println(gyro_pitch);
+delay(4);
+*/
 }
 //####################################################################################### SET UP GYRO ############################################################
 void gyro_setup(int gyro_addr)
@@ -144,6 +188,23 @@ acc_roll=acc_roll*RAD_TO_DEG;
 // pitch=asin(inv_sin_value);
 //pitch=(pitch*180)/3.14;
 //...................................................................................................................................
+
+
+//...................................................complimentary filter.............................................................
+yaw=gyro_yaw;
+roll=acc_roll*c_ + gyro_roll*c;
+pitch=acc_pitch*c_+gyro_pitch*c;
+//....................................................................................................................................
+
+
+
+
+
+
+
+
+
+
 }
 //############################################################################# Calibrate MPU  ########################################################################
 void cal_mpu(int gyro_addr,int num_of_rounds)
