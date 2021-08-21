@@ -232,7 +232,4 @@ motor_a_pulse=motor_a_pulse +  roll_correction;
 motor_b_pulse=motor_b_pulse -  roll_correction;
 motor_c_pulse=motor_c_pulse + roll_correction;
 motor_d_pulse=motor_d_pulse -  roll_correction;
- 
- 
- 
  }
