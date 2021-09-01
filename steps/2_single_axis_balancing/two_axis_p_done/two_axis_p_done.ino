@@ -106,6 +106,13 @@ Serial.println(delta);
 }
 //####################################################################### LOOP  ################################################################################
 void loop() {
+//unsigned long start = micros();
+
+
+//Serial.print("arm value ");
+//Serial.print(arm);
+//Serial.println(" ");
+
 //................................... ARM _ DISARM  ....................
 
 if(receiver_input[1]<1100 && receiver_input[2]<1100&&receiver_input[3]<1100&&receiver_input[4]>1800)
@@ -126,11 +133,9 @@ if(receiver_input[2]<1100 && receiver_input[4]<1100&&receiver_input[3]<1100&&rec
 
 
 //****************************************************************************IF ARMED READ GYRO ESTIMATE PID AND SEND PULSE ELSE SEND MIN PULSE
-/*
-
-
 if(arm==1)
 {
+
 //STEP 1 : COPY PULSE FROM RX INPUT
 motor_a_pulse=receiver_input[3];
 motor_b_pulse=receiver_input[3];
@@ -170,18 +175,60 @@ motA.writeMicroseconds(motor_a_pulse);
 motB.writeMicroseconds(motor_b_pulse);
 motC.writeMicroseconds(motor_c_pulse);
 motD.writeMicroseconds(motor_d_pulse);
+
+Serial.print("Motor a  ");
+Serial.print(motor_a_pulse);
+Serial.print("|Motor b ");
+Serial.print(motor_b_pulse);
+Serial.print("|Motor c ");
+Serial.print(motor_c_pulse);
+Serial.print("|Motor d ");
+Serial.print(motor_d_pulse);
+Serial.println(" ");
+
 }
-                                else
-                                  {
+else
+{
+
                                   //NOT ARMES SO SEND MIN PULSE
                                   motA.writeMicroseconds(MIN_PULSE_LENGTH);
                                   motB.writeMicroseconds(MIN_PULSE_LENGTH);
                                   motC.writeMicroseconds(MIN_PULSE_LENGTH);
                                   motD.writeMicroseconds(MIN_PULSE_LENGTH);
-                                  }
-delay(3);
+
+Serial.print("Motor a  ");
+Serial.print(MIN_PULSE_LENGTH);
+Serial.print("|Motor b ");
+Serial.print(MIN_PULSE_LENGTH);
+Serial.print("|Motor c ");
+Serial.print(MIN_PULSE_LENGTH);
+Serial.print("|Motor d ");
+Serial.print(MIN_PULSE_LENGTH);
+Serial.println(" ");
+
+  }
+//......................................................................................................................................................
+//Serial.println(receiver_input[3]);
+
+/*
+read_mpu(gyro_addr);
+Serial.println(gyro_yaw);
+delay(4);
+*/
+
+/*
+
+TIME ESTIMATION
+
+unsigned long end_t = micros();
+unsigned long delta = end_t - start;
+Serial.print("delta:");
+Serial.println(delta);
 
 */
+
+//int delay_time =4ms
+delay(3);
 }
 //####################################################################################### SET UP GYRO ############################################################
 void gyro_setup(int gyro_addr)

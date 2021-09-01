@@ -1,19 +1,20 @@
 #include <Wire.h>
 #define RAD_TO_DEG 57.295779513082320876798154814105
 
-#define MIN_PULSE_LENGTH 1000 // Minimum pulse length in µs
-#define MAX_PULSE_LENGTH 2000 // Maximum pulse length in µs
-
 #include <Servo.h>
 unsigned long timer_1, timer_2, timer_3, timer_4, current_time;
 byte last_channel_1, last_channel_2, last_channel_3, last_channel_4;
 int receiver_input[5];
 
-
-int motor_a_pulse=0;
-int motor_b_pulse=0;
-int motor_c_pulse=0;
-int motor_d_pulse=0;
+// ---------------------------------------------------------------------------
+// Customize here pulse lengths as needed
+#define MIN_PULSE_LENGTH 1000 // Minimum pulse length in µs
+#define MAX_PULSE_LENGTH 2000 // Maximum pulse length in µs
+// ---------------------------------------------------------------------------
+Servo motA, motB, motC, motD;
+char data;
+// ---------------------------------------------------------------------------
+int arm=0;
 
 //complimentary filter params  YFMC c=0.9996
 double c=0.98;
@@ -40,19 +41,32 @@ double acc_roll,acc_pitch;
 double pitch,roll,yaw;
 double desired_pitch,desired_roll,desired_yaw;
 
-// ---------------------------------------------------------------------------
-Servo motA, motB, motC, motD;
-char data;
-int arm=0;
-// ---------------------------------------------------------------------------
+int motor_a_pulse=0;
+int motor_b_pulse=0;
+int motor_c_pulse=0;
+int motor_d_pulse=0;
 
 
-
-//####################################################### SETUP ##############################################################################################
 void setup() {
-Serial.begin(57600);
-Serial.println("hello world ! ! !");
-Serial.println("setting up gyro");
+  
+    Serial.begin(9600);
+    
+    motA.attach(4, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH);
+    motB.attach(5, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH);
+    motC.attach(6, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH);
+    motD.attach(7, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH);
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN,LOW);
+
+    
+  PCICR |= (1 << PCIE0);                                                    //Set PCIE0 to enable PCMSK0 scan.
+  PCMSK0 |= (1 << PCINT0);                                                  //Set PCINT0 (digital input 8) to trigger an interrupt on state change.
+  PCMSK0 |= (1 << PCINT1);                                                  //Set PCINT1 (digital input 9)to trigger an interrupt on state change.
+  PCMSK0 |= (1 << PCINT2);                                                  //Set PCINT2 (digital input 10)to trigger an interrupt on state change.
+  PCMSK0 |= (1 << PCINT3);                                                  //Set PCINT3 (digital input 11)to trigger an interrupt on state change.  
+
+
+//......................................................................................
 gyro_setup(gyro_addr);//Setting up gyro registers
 //.................. GYRO OFSET
 //Serial.println("Calculating  gyro ofset");
@@ -71,42 +85,12 @@ desired_roll=0;
 desired_pitch=0;
 desired_yaw=0;
 
-//................. Attaching mototrs
-
-   motA.attach(4, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH);
-    motB.attach(5, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH);
-    motC.attach(6, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH);
-    motD.attach(7, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH);
-    pinMode(LED_BUILTIN, OUTPUT);
-    digitalWrite(LED_BUILTIN,LOW);
-//........................ Reciver input interupt
-  PCICR |= (1 << PCIE0);                                                    //Set PCIE0 to enable PCMSK0 scan.
-  PCMSK0 |= (1 << PCINT0);                                                  //Set PCINT0 (digital input 8) to trigger an interrupt on state change.
-  PCMSK0 |= (1 << PCINT1);                                                  //Set PCINT1 (digital input 9)to trigger an interrupt on state change.
-  PCMSK0 |= (1 << PCINT2);                                                  //Set PCINT2 (digital input 10)to trigger an interrupt on state change.
-  PCMSK0 |= (1 << PCINT3);                                                  //Set PCINT3 (digital input 11)to trigger an interrupt on state change.
-
-
-
-/*
-############## calculate time of execution
-unsigned long start = micros();
-read_mpu(gyro_addr);
-Serial.println(gyro_pitch);
-
-unsigned long end_t = micros();
-unsigned long delta = end_t - start;
-Serial.println("delta");
-Serial.println(delta);
-
-728 micro seconds
-*/
-
 
 }
-//####################################################################### LOOP  ################################################################################
+
+
 void loop() {
-//................................... ARM _ DISARM  ....................
+//
 
 if(receiver_input[1]<1100 && receiver_input[2]<1100&&receiver_input[3]<1100&&receiver_input[4]>1800)
 {
@@ -115,6 +99,7 @@ if(receiver_input[1]<1100 && receiver_input[2]<1100&&receiver_input[3]<1100&&rec
   //Serial.println("arm");
   digitalWrite(LED_BUILTIN,HIGH);
   }
+
 if(receiver_input[2]<1100 && receiver_input[4]<1100&&receiver_input[3]<1100&&receiver_input[1]>1800)
 {
   //disarm
@@ -122,66 +107,42 @@ if(receiver_input[2]<1100 && receiver_input[4]<1100&&receiver_input[3]<1100&&rec
   //Serial.println("DIS arm");
   digitalWrite(LED_BUILTIN,LOW);
   }
-//......................................................................
 
 
-//****************************************************************************IF ARMED READ GYRO ESTIMATE PID AND SEND PULSE ELSE SEND MIN PULSE
-/*
 
 
-if(arm==1)
-{
-//STEP 1 : COPY PULSE FROM RX INPUT
-motor_a_pulse=receiver_input[3];
-motor_b_pulse=receiver_input[3];
-motor_c_pulse=receiver_input[3];
-motor_d_pulse=receiver_input[3];
-//STEP 2 : READ GYRO
-read_mpu(gyro_addr);
-//STEP 3 :ESTIMATE  MOTOR PULSE  USING PID
-calculate_motor_pulse_PID();
-//STEP 4 : CHECK IF PULSE IS WITHIN RANGE
-                              //.......................................................................CHECK IF PULSE IS BETWEEN 1000 AND 2000
-                              if(motor_a_pulse>2000)
-                              {motor_a_pulse=2000; }
-                               else if (motor_a_pulse<1000)
-                              {motor_a_pulse=1000;}
 
 
-                              if(motor_b_pulse>2000)
-                              {motor_b_pulse=2000; }
-                               else if (motor_b_pulse<1000)
-                              {motor_b_pulse=1000;}
-
-
-                              if(motor_c_pulse>2000)
-                              {motor_c_pulse=2000; }
-                               else if (motor_c_pulse<1000)
-                              {motor_c_pulse=1000;}
-
-
-                              if(motor_d_pulse>2000)
-                              {motor_d_pulse=2000; }
-                              else if (motor_d_pulse<1000)
-                              {motor_d_pulse=1000;}
-                              //..................................................................................................................
-//STEP 5 : SEND PULSE
-motA.writeMicroseconds(motor_a_pulse);
-motB.writeMicroseconds(motor_b_pulse);
-motC.writeMicroseconds(motor_c_pulse);
-motD.writeMicroseconds(motor_d_pulse);
-}
-                                else
-                                  {
-                                  //NOT ARMES SO SEND MIN PULSE
+   
+            if(arm==0)
+            {
+              Serial.println("DIS arm");
+                     
                                   motA.writeMicroseconds(MIN_PULSE_LENGTH);
                                   motB.writeMicroseconds(MIN_PULSE_LENGTH);
                                   motC.writeMicroseconds(MIN_PULSE_LENGTH);
                                   motD.writeMicroseconds(MIN_PULSE_LENGTH);
-                                  }
-delay(3);
+            
+            delay(200);
+            }           
 
-*/
+            else if(arm==1)
+            {
+              Serial.println(" arm !!!!!!!!");
+              int pulse=receiver_input[3];
+              
+                                  motA.writeMicroseconds(pulse);
+                                  motB.writeMicroseconds(pulse);
+                                  motC.writeMicroseconds(pulse);
+                                  motD.writeMicroseconds(pulse);
+              
+              delay(200);
+              }
+
+
+
+
+
 }
 //####################################################################################### SET UP GYRO ############################################################
 void gyro_setup(int gyro_addr)
@@ -207,7 +168,7 @@ void gyro_setup(int gyro_addr)
     Wire.write(0x03);                                                          //Set the register bits as 00000011 (Set Digital Low Pass Filter to ~43Hz)
     Wire.endTransmission();                                                    //End the transmission with the gyro
 }
-//################################################################################### READ MPU ####################################################################
+//.................................................... READ MPU .........................................
 void read_mpu(int gyro_addr){
     //Read the MPU-6050
     Wire.beginTransmission(gyro_addr);                                   //Start communication with the gyro.
@@ -267,39 +228,8 @@ roll=acc_roll*c_ + gyro_roll*c;
 pitch=acc_pitch*c_+gyro_pitch*c;
 //....................................................................................................................................
 }
-//############################################################################# Calibrate MPU  ########################################################################
-void cal_mpu(int gyro_addr,int num_of_rounds)
-{
-long gyro_sum[3];
-Serial.print("Calibrating gyro:");
-      gyro_sum[0]=0;
-      gyro_sum[1]=0;
-      gyro_sum[2]=0;
-  gyro_offset[0]=0;
-  gyro_offset[1]=0;
-  gyro_offset[2]=0;
-    for (int i=0;i<num_of_rounds;i++)
-    {
-      Serial.print(".");
-      read_mpu(gyro_addr);
-      gyro_sum[0]=gyro_sum[0]+gyro_reading[0];
-      gyro_sum[1]=gyro_sum[1]+gyro_reading[1];
-      gyro_sum[2]=gyro_sum[2]+gyro_reading[2];
-      delay(100);
-    }
-  Serial.println("Done ! ");
-  gyro_offset[0]=gyro_sum[0]/num_of_rounds;
-  gyro_offset[1]=gyro_sum[1]/num_of_rounds;
-  gyro_offset[2]=gyro_sum[2]/num_of_rounds;
 
-Serial.print("gyro ofset 0: ");
-Serial.print(gyro_offset[0]);
-Serial.print("|| gyro ofset 1: ");
-Serial.print(gyro_offset[1]);
-Serial.print("|| gyro ofset 2: ");
-Serial.print(gyro_offset[2]);
-}
-//#######################################################################################################################################################################
+//............................................................................................................
  void calculate_motor_pulse_PID()
  {
    double P_gain,I_gain,D_gain;//P gain for roll and pitch
@@ -351,8 +281,7 @@ motor_d_pulse=motor_d_pulse + pitch_correction;
  }
 
 
-
-//############################################################################################
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ISR(PCINT0_vect){
   current_time = micros();
   //Channel 1=========================================

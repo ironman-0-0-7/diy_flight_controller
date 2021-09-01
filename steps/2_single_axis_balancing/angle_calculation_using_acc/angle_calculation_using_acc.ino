@@ -18,6 +18,24 @@ float gyro_yaw,gyro_roll,gyro_pitch;
 double acc_roll,acc_pitch;
 //####################################################### SETUP ##############################################################################################
 void setup() {
+
+ pinMode(LED_BUILTIN, OUTPUT);
+
+
+for(int i=0;i<4;i++)
+{
+  digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+  delay(100);                       // wait for a second
+  digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+  delay(100); 
+  
+  }
+
+
+
+
+
+  
 Serial.begin(57600);
 Serial.println("hello world ! ! !");
 Serial.println("setting up gyro");
@@ -70,8 +88,28 @@ read_mpu(gyro_addr);
 Serial.println(gyro_yaw);
 delay(4);
 */
+
+
+
+
+
+
+
+
 read_mpu(gyro_addr);
-Serial.println(acc_roll);
+Serial.println(gyro_pitch);
+delay(4);
+if(gyro_pitch>8)
+
+{Serial.println("hloo !!!!!!!!!! ");
+  digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+  delay(100);                       // wait for a second
+  digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+  delay(100);
+}
+
+
+
 }
 //####################################################################################### SET UP GYRO ############################################################
 void gyro_setup(int gyro_addr)
