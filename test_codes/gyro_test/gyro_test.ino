@@ -7,18 +7,19 @@ int acc_axis[4], gyro_axis[4];
 
 
 void setup() {
-  // put your setup code here, to run once:
+Serial.begin(57600);
+Serial.println("hloo setup script is running !!!!!!");
+// put your setup code here, to run once:
 set_gyro_registers();
-
- Serial.begin(57600);
-
-
+Serial.println("Done setting gyro register !!!!!!");
 }
 
 void loop() {
+  Serial.println("on loop  !!!!!!");
   // put your main code here, to run repeatedly:
+  Serial.println("getting gyro values !!!!!!");
 gyro_signalen();
-
+Serial.println("got values !!!!!!");
 //Serial.println(acc_axis[1]);
 //Serial.println(acc_axis[2]);
 //Serial.println(acc_axis[3]);
@@ -36,18 +37,30 @@ delay(300);
 
 
 void gyro_signalen(){
+
+Serial.println("gyro signal len function 1 !!!!!!");
+
+
+
+  
   //Read the MPU-6050
     Wire.beginTransmission(gyro_address);                                   //Start communication with the gyro.
     Wire.write(0x3B);                                                       //Start reading @ register 43h and auto increment with every read.
     Wire.endTransmission();                                                 //End the transmission.
     Wire.requestFrom(gyro_address,14);                                      //Request 14 bytes from the gyro.
     
+ Serial.println("gyro signal len function 2 !!!!!!");   
 //receiver_input_channel_1 = convert_receiver_channel(1);                 //Convert the actual receiver signals for pitch to the standard 1000 - 2000us.
 //receiver_input_channel_2 = convert_receiver_channel(2);                 //Convert the actual receiver signals for roll to the standard 1000 - 2000us.
 //receiver_input_channel_3 = convert_receiver_channel(3);                 //Convert the actual receiver signals for throttle to the standard 1000 - 2000us.
 //receiver_input_channel_4 = convert_receiver_channel(4);                 //Convert the actual receiver signals for yaw to the standard 1000 - 2000us.
+
+
     
-    while(Wire.available() < 14);                                           //Wait until the 14 bytes are received.
+    while(Wire.available() < 14)
+    {Serial.println("wire availianle less than 14 !!!!!!"); };
+     
+    //Wait until the 14 bytes are received.
     acc_axis[1] = Wire.read()<<8|Wire.read();                               //Add the low and high byte to the acc_x variable.
     acc_axis[2] = Wire.read()<<8|Wire.read();                               //Add the low and high byte to the acc_y variable.
     acc_axis[3] = Wire.read()<<8|Wire.read();                               //Add the low and high byte to the acc_z variable.
@@ -55,7 +68,7 @@ void gyro_signalen(){
     gyro_axis[1] = Wire.read()<<8|Wire.read();                              //Read high and low part of the angular data.
     gyro_axis[2] = Wire.read()<<8|Wire.read();                              //Read high and low part of the angular data.
     gyro_axis[3] = Wire.read()<<8|Wire.read();                              //Read high and low part of the angular data.
-  
+  Serial.println("gyro signal len function 3 !!!!!!");
  /* 
   if(cal_int == 2000){
     gyro_axis[1] -= gyro_axis_cal[1];                                       //Only compensate after the calibration.
@@ -81,6 +94,7 @@ void gyro_signalen(){
 
 */
 
+Serial.println("gyro signal len function 4 !!!!!!");
 }
 
 

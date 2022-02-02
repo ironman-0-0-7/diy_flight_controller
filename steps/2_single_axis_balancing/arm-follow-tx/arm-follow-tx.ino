@@ -71,8 +71,18 @@ if(receiver_input[2]<1100 && receiver_input[4]<1100&&receiver_input[3]<1100&&rec
 
             else if(arm==1)
             {
-              Serial.println(" arm !!!!!!!!");
+              
               int pulse=receiver_input[3];
+
+
+              if(pulse<1000)
+              {
+                pulse=1000;
+                }
+
+              Serial.println(" arm !!!!!!!!");
+              Serial.println(pulse);
+
               
                                   motA.writeMicroseconds(pulse);
                                   motB.writeMicroseconds(pulse);
